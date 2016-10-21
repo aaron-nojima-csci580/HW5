@@ -573,7 +573,6 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
        - optional: test for triangles with all three verts off-screen (trivial frustum cull)
 - invoke triangle rasterizer  
 */ 
-	// TODO: MODIFY
 	// Edge Classifiers
 	const int UNDEFINED_EDGE = -1;
 	const int TOP_EDGE = 0;
@@ -713,8 +712,8 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 					triangleTextureIndices[t][V] = ((GzTextureIndex *)(valueList[i]))[t][Y];
 
 					// Warping
-					triangleTextureIndices[t][U] /= ((Vertices[i][Z] / (MAXINT - Vertices[i][Z])) + 1);
-					triangleTextureIndices[t][V] /= ((Vertices[i][Z] / (MAXINT - Vertices[i][Z])) + 1);
+					triangleTextureIndices[t][U] /= ((triangleVertices[t][Z] / (MAXINT - triangleVertices[t][Z])) + 1);
+					triangleTextureIndices[t][V] /= ((triangleVertices[t][Z] / (MAXINT - triangleVertices[t][Z])) + 1);
 				}
 
 				// Get indices of texture indices corresponding to increasing Y
@@ -1010,7 +1009,7 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 							// Get TextureColor from interpolated U,V
 							float interpU = interpolate(uA, uB, uC, uD, i, j);
 							float interpV = interpolate(vA, vB, vC, vD, i, j);
-							// TODO: Unwarping (Understand)
+							// Unwarping
 							interpU *= ((interpZ / (MAXINT - interpZ)) + 1);
 							interpV *= ((interpZ / (MAXINT - interpZ)) + 1);
 							GzColor textureColor;
@@ -1077,7 +1076,7 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 							// Get TextureColor from interpolated U,V
 							float interpU = interpolate(uA, uB, uC, uD, i, j);
 							float interpV = interpolate(vA, vB, vC, vD, i, j);
-							// TODO: Unwarping (Understand)
+							// nwarping
 							interpU *= ((interpZ / (MAXINT - interpZ)) + 1);
 							interpV *= ((interpZ / (MAXINT - interpZ)) + 1);
 
