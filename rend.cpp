@@ -552,7 +552,8 @@ int GzPutAttribute(GzRender	*render, int numAttributes, GzToken	*nameList,
 				case GZ_INTERPOLATE:
 					render->interp_mode = *((int *)valueList[i]);
 					break;
-
+				case GZ_TEXTURE_MAP:
+					render->tex_fun = (GzTexture)valueList[i];
 				// later set texture maps
 			}
 		}
@@ -572,6 +573,7 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
        - optional: test for triangles with all three verts off-screen (trivial frustum cull)
 - invoke triangle rasterizer  
 */ 
+	// TODO: MODIFY
 	// Edge Classifiers
 	const int UNDEFINED_EDGE = -1;
 	const int TOP_EDGE = 0;

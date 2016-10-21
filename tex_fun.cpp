@@ -43,11 +43,13 @@ int tex_fun(float u, float v, GzColor color)
 /* bounds-test u,v to make sure nothing will overflow image array bounds */
 /* determine texture cell corner values and perform bilinear interpolation */
 /* set color to interpolated GzColor value and return */
+  // TODO: IMPLEMENT
 }
 
 /* Procedural texture function */
 int ptex_fun(float u, float v, GzColor color)
 {
+	// TODO: IMPLEMENT
 	return 0;
 }
 
