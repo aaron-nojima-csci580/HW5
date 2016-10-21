@@ -63,21 +63,23 @@ int tex_fun(float u, float v, GzColor color)
   t = v - minV;
 
   // perform bilinear interpolation, set color to interpolated GzColor value and return
-  color[RED] = ((s * t * image[ARRAY(maxU, maxV)][RED])
-	  + ((1 - s) * (t)* image[ARRAY(minU, maxV)][RED])
-	  + ((s)* (1 - t) * image[ARRAY(maxU, minV)][RED])
-	  + ((1 - s) * (1 - t) * image[ARRAY(minU, minV)][RED]));
+  color[RED] =
+	  ((s * t * image[ARRAY(maxU, maxV)][RED]) +
+	  ((1 - s) * t * image[ARRAY(minU, maxV)][RED]) +
+	  (s * (1 - t) * image[ARRAY(maxU, minV)][RED]) +
+	  ((1 - s) * (1 - t) * image[ARRAY(minU, minV)][RED]));
 
+  color[GREEN] =
+	  ((s * t * image[ARRAY(maxU, maxV)][GREEN]) +
+	  ((1 - s) * t * image[ARRAY(minU, maxV)][GREEN]) +
+	  (s * (1 - t) * image[ARRAY(maxU, minV)][GREEN]) +
+	  ((1 - s) * (1 - t) * image[ARRAY(minU, minV)][GREEN]));
 
-  color[GREEN] = ((s * t * image[ARRAY(maxU, maxV)][GREEN])
-	  + ((1 - s) * (t)* image[ARRAY(minU, maxV)][GREEN])
-	  + ((s)* (1 - t) * image[ARRAY(maxU, minV)][GREEN])
-	  + ((1 - s) * (1 - t) * image[ARRAY(minU, minV)][GREEN]));
-
-  color[BLUE] = ((s * t * image[ARRAY(maxU, maxV)][BLUE])
-	  + ((1 - s) * (t)* image[ARRAY(minU, maxV)][BLUE])
-	  + ((s)* (1 - t) * image[ARRAY(maxU, minV)][BLUE])
-	  + ((1 - s) * (1 - t) * image[ARRAY(minU, minV)][BLUE]));
+  color[BLUE] = 
+	  ((s * t * image[ARRAY(maxU, maxV)][BLUE]) +
+	  ((1 - s) * t * image[ARRAY(minU, maxV)][BLUE]) +
+	  (s * (1 - t) * image[ARRAY(maxU, minV)][BLUE]) +
+	  ((1 - s) * (1 - t) * image[ARRAY(minU, minV)][BLUE]));
 
   return GZ_SUCCESS;
 }

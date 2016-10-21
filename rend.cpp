@@ -925,6 +925,8 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 		float blueA, blueB, blueC, blueD;
 		if (render->interp_mode == GZ_COLOR && render->tex_fun == (GzPointer)0)
 		{
+			// Make sure we aren't trying to do texture
+
 			// Get color at each vertex
 			GzColor triangleVertexColors[VERTICES_PER_TRIANGLE];
 			for (int i = 0; i < VERTICES_PER_TRIANGLE; ++i)
@@ -990,6 +992,7 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 				GzIntensity r, g, b, a;
 				GzDepth z;
 				GzGetDisplay(render->display, i, j, &r, &g, &b, &a, &z);
+				
 				// Interpolate z-depth
 				float interpZ = interpolate(NA, NB, NC, ND, i, j);
 				if (interpZ < z || z == 0)
@@ -1004,16 +1007,22 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 					}
 					else if (render->interp_mode == GZ_COLOR)
 					{
+						// If texture enabled
 						if (render->tex_fun != (GzPointer)0)
 						{
 							// Get TextureColor from interpolated U,V
 							float interpU = interpolate(uA, uB, uC, uD, i, j);
 							float interpV = interpolate(vA, vB, vC, vD, i, j);
+							
 							// Unwarping
 							interpU *= ((interpZ / (MAXINT - interpZ)) + 1);
 							interpV *= ((interpZ / (MAXINT - interpZ)) + 1);
+							
+							// Get Texture Color
 							GzColor textureColor;
 							render->tex_fun(interpU, interpV, textureColor);
+							
+							// Apply texture color to Ka, Kd, and Ks
 							render->Ka[RED] = textureColor[RED];
 							render->Ka[GREEN] = textureColor[GREEN];
 							render->Ka[BLUE] = textureColor[BLUE];
@@ -1070,18 +1079,22 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 						pixelNormal[Z] = interpolate(zA, zB, zC, zD, i, j);
 						normalize(&pixelNormal);
 
-						// Get TextureColor from interpolated U,V
+						// If texture enabled
 						if (render->tex_fun != (GzPointer)0)
 						{
 							// Get TextureColor from interpolated U,V
 							float interpU = interpolate(uA, uB, uC, uD, i, j);
 							float interpV = interpolate(vA, vB, vC, vD, i, j);
-							// nwarping
+							
+							// Unwarping
 							interpU *= ((interpZ / (MAXINT - interpZ)) + 1);
 							interpV *= ((interpZ / (MAXINT - interpZ)) + 1);
 
+							// Get Texture Color
 							GzColor textureColor;
 							render->tex_fun(interpU, interpV, textureColor);
+							
+							// Apply texture color to Ka and Kd
 							render->Ka[RED] = textureColor[RED];
 							render->Ka[GREEN] = textureColor[GREEN];
 							render->Ka[BLUE] = textureColor[BLUE];
