@@ -586,8 +586,10 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 		const int VERTICES_PER_TRIANGLE = 3;
 		GzCoord triangleVertices[VERTICES_PER_TRIANGLE];
 		GzCoord triangleNormals[VERTICES_PER_TRIANGLE];
+		GzTextureIndex triangleTextureIndices[VERTICES_PER_TRIANGLE];
 		int * indices;
 		GzCoord Vertices[VERTICES_PER_TRIANGLE], Normals[VERTICES_PER_TRIANGLE];
+		GzTextureIndex TextureIndices[VERTICES_PER_TRIANGLE];
 		for (int i = 0; i < numParts; ++i)
 		{
 			if (nameList[i] == GZ_POSITION)
@@ -690,17 +692,40 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 					triangleNormals[t][X] = xResult / length;
 					triangleNormals[t][Y] = yResult / length;
 					triangleNormals[t][Z] = zResult / length;
-
-					// Get indices of vertices corresponding to increasing Y
-					int i0 = indices[0];
-					int i1 = indices[1];
-					int i2 = indices[2];
-
-					// Get normals in increasing vertex-Y
-					memcpy(Normals[0], triangleNormals[i0], sizeof(float) * 3);
-					memcpy(Normals[1], triangleNormals[i1], sizeof(float) * 3);
-					memcpy(Normals[2], triangleNormals[i2], sizeof(float) * 3);
 				}
+
+				// Get indices of vertices corresponding to increasing Y
+				int i0 = indices[0];
+				int i1 = indices[1];
+				int i2 = indices[2];
+
+				// Get normals in increasing vertex-Y
+				memcpy(Normals[0], triangleNormals[i0], sizeof(GzCoord));
+				memcpy(Normals[1], triangleNormals[i1], sizeof(GzCoord));
+				memcpy(Normals[2], triangleNormals[i2], sizeof(GzCoord));
+			}
+			else if (nameList[i] == GZ_TEXTURE_INDEX)
+			{
+				// Load all texture indices from provided input
+				for (int t = 0; t < VERTICES_PER_TRIANGLE; ++t)
+				{
+					triangleTextureIndices[t][U] = ((GzTextureIndex *)(valueList[i]))[t][X];
+					triangleTextureIndices[t][V] = ((GzTextureIndex *)(valueList[i]))[t][Y];
+
+					// Warping
+					triangleTextureIndices[t][U] /= ((Vertices[i][Z] / (MAXINT - Vertices[i][Z])) + 1);
+					triangleTextureIndices[t][V] /= ((Vertices[i][Z] / (MAXINT - Vertices[i][Z])) + 1);
+				}
+
+				// Get indices of texture indices corresponding to increasing Y
+				int i0 = indices[0];
+				int i1 = indices[1];
+				int i2 = indices[2];
+
+				// Get texture indices in increasing vertex-Y
+				memcpy(TextureIndices[0], triangleTextureIndices[i0], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[1], triangleTextureIndices[i1], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[2], triangleTextureIndices[i2], sizeof(GzTextureIndex));
 			}
 		}
 
@@ -738,6 +763,11 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 				memcpy(temp, Normals[0], sizeof(GzCoord));
 				memcpy(Normals[0], Normals[1], sizeof(GzCoord));
 				memcpy(Normals[1], temp, sizeof(GzCoord));
+
+				// Swap T0 and T1
+				memcpy(temp, TextureIndices[0], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[0], TextureIndices[1], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[1], temp, sizeof(GzTextureIndex));
 			}
 			else
 			{
@@ -768,6 +798,11 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 				memcpy(temp, Normals[1], sizeof(GzCoord));
 				memcpy(Normals[1], Normals[2], sizeof(GzCoord));
 				memcpy(Normals[2], temp, sizeof(GzCoord));
+
+				// Swap T1 and T2
+				memcpy(temp, TextureIndices[1], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[1], TextureIndices[2], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[2], temp, sizeof(GzTextureIndex));
 			}
 			else if (Vertices[1][X] > Vertices[2][X])
 			{
@@ -813,6 +848,11 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 				memcpy(temp, Normals[1], sizeof(GzCoord));
 				memcpy(Normals[1], Normals[2], sizeof(GzCoord));
 				memcpy(Normals[2], temp, sizeof(GzCoord));
+
+				// Want to switch T1 and T2
+				memcpy(temp, TextureIndices[1], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[1], TextureIndices[2], sizeof(GzTextureIndex));
+				memcpy(TextureIndices[2], temp, sizeof(GzTextureIndex));
 
 				// E1 is a left edge
 				edgeTypes[1] = LEFT_EDGE;
@@ -863,6 +903,14 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 		float zValues[3] = { Vertices[0][Z], Vertices[1][Z], Vertices[2][Z] };
 		getTriangleInterpolator(Vertices, zValues, &NA, &NB, &NC, &ND);
 
+		// Get linear interpolation for texture coordinates (indices)
+		float uValues[3] = { TextureIndices[0][U], TextureIndices[1][U], TextureIndices[2][U] };
+		float vValues[3] = { TextureIndices[0][V], TextureIndices[1][V], TextureIndices[2][V] };
+		float uA, uB, uC, uD;
+		float vA, vB, vC, vD;
+		getTriangleInterpolator(Vertices, uValues, &uA, &uB, &uC, &uD);
+		getTriangleInterpolator(Vertices, vValues, &vA, &vB, &vC, &vD);
+
 		// Calculate Flat Surface color
 		GzColor flatColor;
 		if (render->interp_mode == GZ_FLAT)
@@ -876,7 +924,7 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 		float redA, redB, redC, redD;
 		float greenA, greenB, greenC, greenD;
 		float blueA, blueB, blueC, blueD;
-		if (render->interp_mode == GZ_COLOR)
+		if (render->interp_mode == GZ_COLOR && render->tex_fun == (GzPointer)0)
 		{
 			// Get color at each vertex
 			GzColor triangleVertexColors[VERTICES_PER_TRIANGLE];
@@ -957,6 +1005,42 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 					}
 					else if (render->interp_mode == GZ_COLOR)
 					{
+						if (render->tex_fun != (GzPointer)0)
+						{
+							// Get TextureColor from interpolated U,V
+							float interpU = interpolate(uA, uB, uC, uD, i, j);
+							float interpV = interpolate(vA, vB, vC, vD, i, j);
+							// TODO: Unwarping (Understand)
+							interpU *= ((interpZ / (MAXINT - interpZ)) + 1);
+							interpV *= ((interpZ / (MAXINT - interpZ)) + 1);
+							GzColor textureColor;
+							render->tex_fun(interpU, interpV, textureColor);
+							render->Ka[RED] = textureColor[RED];
+							render->Ka[GREEN] = textureColor[GREEN];
+							render->Ka[BLUE] = textureColor[BLUE];
+							render->Kd[RED] = textureColor[RED];
+							render->Kd[GREEN] = textureColor[GREEN];
+							render->Kd[BLUE] = textureColor[BLUE];
+							render->Ks[RED] = textureColor[RED];
+							render->Ks[GREEN] = textureColor[GREEN];
+							render->Ks[BLUE] = textureColor[BLUE];
+
+							// Get color at each vertex
+							GzColor triangleVertexColors[VERTICES_PER_TRIANGLE];
+							for (int i = 0; i < VERTICES_PER_TRIANGLE; ++i)
+							{
+								getColor(render, &(Normals[i]), &triangleVertexColors[i]);
+							}
+							float redValues[3] = { triangleVertexColors[0][RED], triangleVertexColors[1][RED], triangleVertexColors[2][RED] };
+							float greenValues[3] = { triangleVertexColors[0][GREEN], triangleVertexColors[1][GREEN], triangleVertexColors[2][GREEN] };
+							float blueValues[3] = { triangleVertexColors[0][BLUE], triangleVertexColors[1][BLUE], triangleVertexColors[2][BLUE] };
+
+							// Get linear interpolator for vertex colors
+							getTriangleInterpolator(Vertices, redValues, &redA, &redB, &redC, &redD);
+							getTriangleInterpolator(Vertices, greenValues, &greenA, &greenB, &greenC, &greenD);
+							getTriangleInterpolator(Vertices, blueValues, &blueA, &blueB, &blueC, &blueD);
+						}
+
 						// interpolate color based on vertex colors
 						pixelColor[RED] = interpolate(redA, redB, redC, redD, i, j);
 						pixelColor[GREEN] = interpolate(greenA, greenB, greenC, greenD, i, j);
@@ -987,9 +1071,34 @@ int GzPutTriangle(GzRender	*render, int numParts, GzToken *nameList, GzPointer	*
 						pixelNormal[Z] = interpolate(zA, zB, zC, zD, i, j);
 						normalize(&pixelNormal);
 
+						// Get TextureColor from interpolated U,V
+						if (render->tex_fun != (GzPointer)0)
+						{
+							// Get TextureColor from interpolated U,V
+							float interpU = interpolate(uA, uB, uC, uD, i, j);
+							float interpV = interpolate(vA, vB, vC, vD, i, j);
+							// TODO: Unwarping (Understand)
+							interpU *= ((interpZ / (MAXINT - interpZ)) + 1);
+							interpV *= ((interpZ / (MAXINT - interpZ)) + 1);
+
+							GzColor textureColor;
+							render->tex_fun(interpU, interpV, textureColor);
+							render->Ka[RED] = textureColor[RED];
+							render->Ka[GREEN] = textureColor[GREEN];
+							render->Ka[BLUE] = textureColor[BLUE];
+							render->Kd[RED] = textureColor[RED];
+							render->Kd[GREEN] = textureColor[GREEN];
+							render->Kd[BLUE] = textureColor[BLUE];
+						}
+
 						// get pixel color
 						getColor(render, &pixelNormal, &pixelColor);
 					}
+
+					// Clamp pixel color [0, 1]
+					pixelColor[RED] = fmaxf(0, fminf(1, pixelColor[RED]));
+					pixelColor[GREEN] = fmaxf(0, fminf(1, pixelColor[GREEN]));
+					pixelColor[BLUE] = fmaxf(0, fminf(1, pixelColor[BLUE]));
 
 					GzPutDisplay(render->display, i, j, ctoi(pixelColor[RED]), ctoi(pixelColor[GREEN]), ctoi(pixelColor[BLUE]), a, interpZ);
 				}
