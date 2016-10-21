@@ -3,10 +3,12 @@
 #include	"stdio.h"
 #include	"Gz.h"
 
+#define ARRAY(x,y)  (x + (y * xs))
+
 GzColor	*image=NULL;
 int xs, ys;
 int reset = 1;
-#define ARRAY(x,y)  (x + (y * xs))
+
 /* Image texture function */
 int tex_fun(float u, float v, GzColor color)
 {
@@ -48,7 +50,7 @@ int tex_fun(float u, float v, GzColor color)
   u = fmaxf(0, fminf(1, u));
   v = fmaxf(0, fminf(1, v));
 
-  //// determine texture cell corner values (after scale)
+  // determine texture cell corner values (after scale)
   u = u * (xs - 1);
   v = v * (ys - 1);
   int minU, maxU, minV, maxV;
@@ -83,8 +85,31 @@ int tex_fun(float u, float v, GzColor color)
 /* Procedural texture function */
 int ptex_fun(float u, float v, GzColor color)
 {
+	// bounds-test u,v to make sure nothing will overflow image array bounds
+	u = fmaxf(0, fminf(1, u));
+	v = fmaxf(0, fminf(1, v));
+
 	// TODO: IMPLEMENT (Be Creative!)
-	return 0;
+	GzColor black = { 0.0f, 0.0f, 0.0f };
+	GzColor red = { 1.0f, 0.0f, 0.0f };
+
+	int gridCount = 8;
+	int uGrid = floor(u * gridCount);
+	int vGrid = floor(v * gridCount);
+	if (uGrid % 2 == vGrid % 2)
+	{
+		color[RED] = black[RED];
+		color[GREEN] = black[GREEN];
+		color[BLUE] = black[BLUE];
+	}
+	else
+	{
+		color[RED] = red[RED];
+		color[GREEN] = red[GREEN];
+		color[BLUE] = red[BLUE];
+	}
+
+	return GZ_SUCCESS;
 }
 
 /* Free texture memory */
