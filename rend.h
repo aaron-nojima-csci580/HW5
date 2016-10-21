@@ -44,10 +44,29 @@ int GzPutAttribute(GzRender	*render, int numAttributes, GzToken	*nameList,
 int GzPutTriangle(GzRender *render, int	numParts, GzToken *nameList,
 	GzPointer *valueList);
 
+// Helper Functions
+void sortTriangleVertices(float * values, int ** sortedIndices);
+int sign(float value);
+void getTriangleInterpolator(GzCoord * triangleVertices, float * values, float * A, float * B, float * C, float * D);
+float interpolate(float A, float B, float C, float D, float x, float y);
+short ctoi(float color);
+
 // HW3
 int GzPutCamera(GzRender *render, GzCamera *camera);
 int GzPushMatrix(GzRender *render, GzMatrix	matrix);
 int GzPopMatrix(GzRender *render);
+
+// HW4
+void calculateNormalMatrix(GzMatrix matrix, GzMatrix * normalMatrix);
+void getColor(GzRender * render, GzCoord * N, GzColor * color);
+void vectorAdd(GzCoord * u, GzCoord * v, GzCoord * out);
+void vectorIncrease(GzCoord * u, GzCoord * v);
+void vectorSubtract(GzCoord * u, GzCoord * v, GzCoord * out);
+void scaleVector(GzCoord * v, float scalar);
+void scalarProduct(GzCoord * v, float scalar, GzCoord * out);
+void normalize(GzCoord * v);
+float dotProduct(GzCoord * u, GzCoord * v);
+void colorMultiply(GzColor * u, GzColor * v, GzColor * out);
 
 // HW5
 int GzFreeTexture();
